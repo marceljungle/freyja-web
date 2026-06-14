@@ -1,0 +1,12 @@
+# Development profile (activated automatically by `mvn spring-boot:run`, or via
+# SPRING_PROFILES_ACTIVE=dev). Relaxes CORS so the SPA can reach the API from any
+# host — localhost, a LAN IP (e.g. http://192.168.x.x:5173), etc.
+#
+# Do NOT use this profile in production: it allows requests from any origin.
+freyja:
+  cors:
+    allowed-origins: "*"
+
+logging:
+  level:
+    com.freyja: DEBUG

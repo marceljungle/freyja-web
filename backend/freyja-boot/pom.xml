@@ -9,9 +9,14 @@
     <plugins>
       <plugin>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <configuration>
-          <mainClass>com.freyja.boot.FreyjaApplication</mainClass>
-        </configuration>
+                <configuration>
+                    <mainClass>com.freyja.boot.FreyjaApplication</mainClass>
+                    <!-- Local `mvn spring-boot:run` uses the dev profile (relaxed CORS).
+                         The packaged jar/Docker image is unaffected. -->
+                    <profiles>
+                        <profile>dev</profile>
+                    </profiles>
+                </configuration>
         <executions>
           <execution>
             <goals>

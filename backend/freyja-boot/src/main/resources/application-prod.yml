@@ -1,0 +1,11 @@
+# Production profile (activate with SPRING_PROFILES_ACTIVE=prod). CORS is
+# restricted: set FREYJA_CORS_ALLOWED_ORIGINS to the dashboard's public origin
+# (comma-separated for multiple). The default below matches the bundled
+# docker-compose.prod.yml frontend port.
+freyja:
+  cors:
+    allowed-origins: ${FREYJA_CORS_ALLOWED_ORIGINS:http://localhost:8088}
+
+logging:
+  level:
+    com.freyja: ${FREYJA_LOG_LEVEL:INFO}

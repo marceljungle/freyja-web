@@ -47,6 +47,7 @@ services:
       FREYJA_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-freyja}
       FREYJA_DB_USER: ${POSTGRES_USER:-freyja}
       FREYJA_DB_PASSWORD: ${POSTGRES_PASSWORD:-freyja}
+      SPRING_PROFILES_ACTIVE: prod
       FREYJA_MQTT_ENABLED: "true"
       FREYJA_MQTT_URL: tcp://mosquitto:1883
       FREYJA_JWT_SECRET: ${FREYJA_JWT_SECRET:-Y2hhbmdlLW1lLWluLXByb2R1Y3Rpb24tZnJleWphLXN1cGVyLXNlY3JldC1rZXktMzJi}

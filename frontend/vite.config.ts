@@ -11,6 +11,9 @@ export default defineConfig({
     },
   },
   server: {
+    // Listen on all interfaces so the dev SPA is reachable from other hosts
+    // (e.g. http://192.168.x.x:5173). Pair with the backend's `dev` profile.
+    host: true,
     port: 5173,
     proxy: {
       // Proxy API calls to the Spring backend during development.
