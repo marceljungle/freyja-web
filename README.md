@@ -97,8 +97,27 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173. Register an account and add a device. (Web Serial
-requires Chrome/Edge over `localhost` or HTTPS.)
+Open http://localhost:5173. Register an account and add a device.
+
+### Web Serial provisioning (secure context)
+
+The "Add device" flow uses the **Web Serial API**, which runs in the browser on
+the machine the tracker is plugged into and is only available in a **secure
+context** — Chrome/Edge over HTTPS **or** `http://localhost`. Plain HTTP on a LAN
+IP (e.g. `http://192.168.x.x:5173`) is blocked by the browser. Options when not
+on `localhost`:
+
+- **HTTPS dev server (recommended):** `npm run dev:https` serves the SPA over
+  TLS with a self-signed cert (e.g. `https://192.168.x.x:5173`). Accept the
+  one-time certificate warning; Web Serial then works.
+- **SSH tunnel:** plug the device into your laptop and forward the remote dev
+  server to localhost: `ssh -L 5173:localhost:5173 user@<host>`, then open
+  `http://localhost:5173`.
+- **Chrome flag (quick, per-origin):** `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
+  → add `http://<host>:5173` → relaunch.
+
+In production the SPA is served over your own HTTPS endpoint, so provisioning
+works normally.
 
 Simulate a device without hardware:
 

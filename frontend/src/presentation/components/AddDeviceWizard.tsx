@@ -64,7 +64,7 @@ export function AddDeviceWizard({ onClose, onRegistered }: Props) {
 
         {!provisioning.supported && (
           <p className="mb-4 rounded-md bg-amber-50 p-3 text-sm text-amber-800">
-            Web Serial isn't available here. Use Chrome or Edge over HTTPS or localhost.
+            {provisioning.unsupportedReason}
           </p>
         )}
 

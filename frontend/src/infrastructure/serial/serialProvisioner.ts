@@ -26,6 +26,25 @@ export function isWebSerialSupported(): boolean {
 }
 
 /**
+ * A human-readable reason why Web Serial is unavailable, or null when it works.
+ * Distinguishes the common "insecure context" case (a LAN IP over plain HTTP)
+ * from an unsupported browser, so the UI can guide the user to the right fix.
+ */
+export function webSerialUnavailableReason(): string | null {
+  if (isWebSerialSupported()) {
+    return null;
+  }
+  if (typeof window !== "undefined" && window.isSecureContext === false) {
+    return (
+      "Web Serial needs a secure context. Open this app over https:// or via " +
+      "http://localhost (an SSH tunnel works), or start the dev server with HTTPS " +
+      "(npm run dev:https)."
+    );
+  }
+  return "Web Serial isn't supported in this browser. Use Chrome or Edge on desktop.";
+}
+
+/**
  * Drives the firmware's Web Serial onboarding protocol (see serial_cli.c):
  *   get_info  -> {"imei","fw_version"}
  *   set_config-> {"status":"ok"}  (device then reboots)

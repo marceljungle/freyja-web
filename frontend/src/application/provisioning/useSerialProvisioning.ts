@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import {
   SerialProvisioner,
   isWebSerialSupported,
+  webSerialUnavailableReason,
   type DeviceInfo,
   type NetworkConfigInput,
 } from "@/infrastructure/serial/serialProvisioner";
@@ -76,6 +77,7 @@ export function useSerialProvisioning() {
   return {
     ...state,
     supported: isWebSerialSupported(),
+    unsupportedReason: webSerialUnavailableReason(),
     connect,
     sendConfig,
     disconnect,
