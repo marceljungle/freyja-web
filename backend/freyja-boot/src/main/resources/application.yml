@@ -1,0 +1,43 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: freyja-backend
+  datasource:
+    url: ${FREYJA_DB_URL:jdbc:postgresql://localhost:5432/freyja}
+    username: ${FREYJA_DB_USER:freyja}
+    password: ${FREYJA_DB_PASSWORD:freyja}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+freyja:
+  security:
+    jwt:
+      # Override in production via FREYJA_JWT_SECRET (Base64, >= 256 bits).
+      secret: ${FREYJA_JWT_SECRET:Y2hhbmdlLW1lLWluLXByb2R1Y3Rpb24tZnJleWphLXN1cGVyLXNlY3JldC1rZXktMzJi}
+      issuer: freyja
+      expiration-ms: ${FREYJA_JWT_EXPIRATION_MS:86400000}
+  mqtt:
+    enabled: ${FREYJA_MQTT_ENABLED:true}
+    url: ${FREYJA_MQTT_URL:tcp://localhost:1883}
+    client-id: ${FREYJA_MQTT_CLIENT_ID:freyja-backend}
+    username: ${FREYJA_MQTT_USERNAME:}
+    password: ${FREYJA_MQTT_PASSWORD:}
+    telemetry-topic: ${FREYJA_MQTT_TELEMETRY_TOPIC:freyja/+/telemetry}
+    command-topic-pattern: ${FREYJA_MQTT_COMMAND_TOPIC_PATTERN:freyja/%s/rx}
+    qos: ${FREYJA_MQTT_QOS:1}
+
+logging:
+  level:
+    com.freyja: ${FREYJA_LOG_LEVEL:INFO}
+    org.springframework.integration.mqtt: WARN

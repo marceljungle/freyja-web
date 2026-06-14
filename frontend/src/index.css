@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-100 text-slate-800 antialiased;
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-freyja-500 focus:outline-none focus:ring-1 focus:ring-freyja-500;
+  }
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  }
+  .btn-primary {
+    @apply rounded-lg bg-freyja-500 px-4 py-2 font-medium text-white hover:bg-freyja-600 disabled:opacity-50;
+  }
+}
+
+/* Leaflet must have an explicit height to render. */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: #aadaff;
+}

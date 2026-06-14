@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>freyja-backend</artifactId>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>spring-boot-maven-plugin</artifactId>
+          <groupId>org.springframework.boot</groupId>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Internal modules -->
+      <dependency>
+        <artifactId>freyja-domain</artifactId>
+        <groupId>com.freyja</groupId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>freyja-application</artifactId>
+        <groupId>com.freyja</groupId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>freyja-infrastructure</artifactId>
+        <groupId>com.freyja</groupId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <!-- JWT -->
+      <dependency>
+        <artifactId>jjwt-api</artifactId>
+        <groupId>io.jsonwebtoken</groupId>
+        <version>${jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>jjwt-impl</artifactId>
+        <groupId>io.jsonwebtoken</groupId>
+        <version>${jjwt.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>jjwt-jackson</artifactId>
+        <groupId>io.jsonwebtoken</groupId>
+        <version>${jjwt.version}</version>
+      </dependency>
+
+      <!-- Eclipse Paho MQTT v3 client (optional dep of spring-integration-mqtt) -->
+      <dependency>
+        <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+        <groupId>org.eclipse.paho</groupId>
+        <version>${paho.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <description>Self-hosted IoT asset tracker - Spring Boot backend (hexagonal architecture)</description>
+  <groupId>com.freyja</groupId>
+  <modelVersion>4.0.0</modelVersion>
+  <modules>
+    <module>freyja-domain</module>
+    <module>freyja-application</module>
+    <module>freyja-infrastructure</module>
+    <module>freyja-boot</module>
+  </modules>
+  <name>Freyja Backend</name>
+
+  <packaging>pom</packaging>
+
+  <parent>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <groupId>org.springframework.boot</groupId>
+    <relativePath />
+    <version>3.3.5</version>
+  </parent>
+
+  <properties>
+    <java.version>21</java.version>
+    <jjwt.version>0.12.6</jjwt.version>
+    <paho.version>1.2.5</paho.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <version>0.1.0-SNAPSHOT</version>
+</project>

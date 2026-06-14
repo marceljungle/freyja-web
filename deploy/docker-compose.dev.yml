@@ -1,0 +1,38 @@
+# Freyja - local development dependencies (PostgreSQL + Mosquitto MQTT broker).
+# Run the Spring backend and the Vite frontend on the host against these.
+#
+#   docker compose -f deploy/docker-compose.dev.yml up -d
+#
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: freyja-postgres-dev
+    environment:
+      POSTGRES_DB: freyja
+      POSTGRES_USER: freyja
+      POSTGRES_PASSWORD: freyja
+    ports:
+      - "5432:5432"
+    volumes:
+      - freyja-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U freyja -d freyja"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: freyja-mosquitto-dev
+    ports:
+      - "1883:1883"   # MQTT
+      - "9001:9001"   # MQTT over WebSockets (optional tooling)
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - freyja-mosquitto-data:/mosquitto/data
+
+volumes:
+  freyja-pg-data:
+    name: freyja-dev-pg-data
+  freyja-mosquitto-data:
+    name: freyja-dev-mosquitto-data

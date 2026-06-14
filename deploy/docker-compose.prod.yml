@@ -1,0 +1,70 @@
+# Freyja - full self-hosted stack: backend + frontend (Nginx) + PostgreSQL + Mosquitto.
+#
+#   cp deploy/.env.example deploy/.env   # then edit secrets
+#   docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d --build
+#
+# The frontend is published on http://localhost:${FRONTEND_PORT:-8088}
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: freyja-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-freyja}
+      POSTGRES_USER: ${POSTGRES_USER:-freyja}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-freyja}
+    volumes:
+      - freyja-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-freyja} -d ${POSTGRES_DB:-freyja}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: freyja-mosquitto
+    restart: unless-stopped
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - freyja-mosquitto-data:/mosquitto/data
+    ports:
+      # Exposed so physical devices can reach the broker. Restrict/secure for real deployments.
+      - "${MQTT_PORT:-1883}:1883"
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: freyja-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    environment:
+      FREYJA_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-freyja}
+      FREYJA_DB_USER: ${POSTGRES_USER:-freyja}
+      FREYJA_DB_PASSWORD: ${POSTGRES_PASSWORD:-freyja}
+      FREYJA_MQTT_ENABLED: "true"
+      FREYJA_MQTT_URL: tcp://mosquitto:1883
+      FREYJA_JWT_SECRET: ${FREYJA_JWT_SECRET:-Y2hhbmdlLW1lLWluLXByb2R1Y3Rpb24tZnJleWphLXN1cGVyLXNlY3JldC1rZXktMzJi}
+      FREYJA_CORS_ALLOWED_ORIGINS: ${FREYJA_CORS_ALLOWED_ORIGINS:-http://localhost:8088}
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: freyja-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8088}:80"
+
+volumes:
+  freyja-pg-data:
+    name: freyja-pg-data
+  freyja-mosquitto-data:
+    name: freyja-mosquitto-data

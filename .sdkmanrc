@@ -1,0 +1,2 @@
+# Reproducible JDK for this project (use: sdk env install && sdk env)
+java=21.0.6-librca
