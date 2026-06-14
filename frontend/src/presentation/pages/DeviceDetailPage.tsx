@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useDevice } from "@/application/devices/useDevices";
 import { useLatestTelemetry, useTrajectory } from "@/application/telemetry/useTelemetry";
@@ -18,9 +18,19 @@ export function DeviceDetailPage() {
   const { deviceId } = useParams<{ deviceId: string }>();
   const [range, setRange] = useState(DEFAULT_RANGE);
 
+  // Recompute the trajectory time window only when the preset changes or every
+  // 30s — NOT on every render. Otherwise trajectoryRange()'s `to = now` would
+  // change the query key continuously and refetch in a tight loop.
+  const [windowTick, setWindowTick] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => setWindowTick((t) => t + 1), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const trajectoryQuery = useMemo(() => trajectoryRange(range), [range, windowTick]);
+
   const { data: device } = useDevice(deviceId);
   const { data: latest } = useLatestTelemetry(deviceId);
-  const { data: trajectory } = useTrajectory(deviceId, trajectoryRange(range));
+  const { data: trajectory } = useTrajectory(deviceId, trajectoryQuery);
   const requestLocation = useRequestLocation(deviceId);
 
   const lastFix = latest?.hasFix ? latest : null;

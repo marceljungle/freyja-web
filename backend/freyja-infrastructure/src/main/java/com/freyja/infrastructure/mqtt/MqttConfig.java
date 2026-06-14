@@ -3,6 +3,8 @@ package com.freyja.infrastructure.mqtt;
 import com.freyja.domain.port.out.MqttPublisher;
 import com.freyja.infrastructure.config.MqttProperties;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -31,12 +33,14 @@ import org.springframework.util.StringUtils;
 @ConditionalOnProperty(prefix = "freyja.mqtt", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class MqttConfig {
 
+  private static final Logger log = LoggerFactory.getLogger(MqttConfig.class);
+
   @Bean
   public MqttPahoClientFactory mqttClientFactory(MqttProperties props) {
     DefaultMqttPahoClientFactory factory = new DefaultMqttPahoClientFactory();
     MqttConnectOptions options = new MqttConnectOptions();
     options.setServerURIs(new String[]{props.getUrl()});
-    options.setCleanSession(true);
+    options.setCleanSession(props.isCleanSession());
     options.setAutomaticReconnect(true);
     if (StringUtils.hasText(props.getUsername())) {
       options.setUserName(props.getUsername());
@@ -58,6 +62,8 @@ public class MqttConfig {
       MqttPahoClientFactory factory,
       MqttProperties props,
       @Qualifier("mqttInboundChannel") MessageChannel inboundChannel) {
+    log.info("MQTT inbound: connecting to {} (clientId={}-in, cleanSession={}) and subscribing to '{}' at QoS {}",
+        props.getUrl(), props.getClientId(), props.isCleanSession(), props.getTelemetryTopic(), props.getQos());
     MqttPahoMessageDrivenChannelAdapter adapter =
         new MqttPahoMessageDrivenChannelAdapter(
             props.getClientId() + "-in", factory, props.getTelemetryTopic());

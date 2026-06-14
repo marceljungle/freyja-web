@@ -45,7 +45,7 @@ public class TelemetryMqttHandler {
       if (stored.isEmpty()) {
         log.warn("Dropped telemetry from topic '{}' (unknown or invalid device)", topic);
       } else {
-        log.debug("Ingested telemetry id={} from topic '{}'", stored.get().id(), topic);
+        log.info("Ingested telemetry id={} from topic '{}'", stored.get().id(), topic);
       }
     } catch (Exception ex) {
       log.error("Failed to process telemetry from topic '{}': {}", topic, ex.getMessage());

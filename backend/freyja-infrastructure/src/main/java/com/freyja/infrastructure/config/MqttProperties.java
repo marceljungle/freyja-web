@@ -24,6 +24,13 @@ public class MqttProperties {
 
   private int qos = 1;
 
+  /**
+   * Clean session flag for the backend's broker connection. {@code false}
+   * (default) keeps a persistent session so the broker queues QoS 1 telemetry
+   * while the backend is briefly disconnected and replays it on reconnect.
+   */
+  private boolean cleanSession = false;
+
   public boolean isEnabled() {
     return enabled;
   }
@@ -86,6 +93,14 @@ public class MqttProperties {
 
   public void setQos(int qos) {
     this.qos = qos;
+  }
+
+  public boolean isCleanSession() {
+    return cleanSession;
+  }
+
+  public void setCleanSession(boolean cleanSession) {
+    this.cleanSession = cleanSession;
   }
 
   public String commandTopicFor(String imei) {
