@@ -41,6 +41,11 @@ freyja:
     telemetry-topic: ${FREYJA_MQTT_TELEMETRY_TOPIC:freyja/+/telemetry}
     command-topic-pattern: ${FREYJA_MQTT_COMMAND_TOPIC_PATTERN:freyja/%s/rx}
     qos: ${FREYJA_MQTT_QOS:1}
+  opencellid:
+    # Cell-tower location fallback. Leave the key blank to disable resolution.
+    api-key: ${FREYJA_OPENCELLID_API_KEY:}
+    base-url: ${FREYJA_OPENCELLID_BASE_URL:https://opencellid.org}
+    timeout-ms: ${FREYJA_OPENCELLID_TIMEOUT_MS:3000}
 
 logging:
   level:

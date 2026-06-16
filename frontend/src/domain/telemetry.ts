@@ -3,11 +3,17 @@ export interface Telemetry {
   deviceId: string;
   reason: string | null;
   hasFix: boolean;
+  approximate: boolean;
   latitude: number | null;
   longitude: number | null;
   accuracy: number | null;
   batteryMv: number | null;
   batteryPercent: number | null;
+  temperatureC: number | null;
+  mcc: number | null;
+  mnc: number | null;
+  tac: number | null;
+  cellId: number | null;
   deviceTime: string | null;
   receivedAt: string;
 }

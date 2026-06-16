@@ -46,4 +46,9 @@ public class DeviceRepositoryAdapter implements DeviceRepository {
   public boolean existsByImei(Imei imei) {
     return repository.existsByImei(imei.value());
   }
+
+  @Override
+  public void deleteById(UUID id) {
+    repository.deleteById(id);
+  }
 }

@@ -16,4 +16,8 @@ export const deviceApi = {
     const { data } = await apiClient.post<Device>("/devices", input);
     return data;
   },
+
+  async remove(deviceId: string): Promise<void> {
+    await apiClient.delete(`/devices/${deviceId}`);
+  },
 };

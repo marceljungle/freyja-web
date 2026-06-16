@@ -11,11 +11,14 @@ import com.freyja.domain.model.command.CommandStatus;
 import com.freyja.domain.model.command.DeviceCommand;
 import com.freyja.domain.model.device.Device;
 import com.freyja.domain.model.telemetry.TelemetryData;
+import com.freyja.domain.port.out.CellLocationResolver;
 import com.freyja.domain.port.out.DeviceCommandRepository;
 import com.freyja.domain.port.out.DeviceRepository;
 import com.freyja.domain.port.out.TelemetryRepository;
 import com.freyja.domain.port.out.TimeProvider;
 import com.freyja.domain.vo.BatteryLevel;
+import com.freyja.domain.vo.CellLocation;
+import com.freyja.domain.vo.CellTower;
 import com.freyja.domain.vo.Coordinates;
 import com.freyja.domain.vo.Imei;
 import org.springframework.stereotype.Service;
@@ -32,15 +35,19 @@ public class IngestTelemetryUseCase
 
   private final DeviceCommandRepository deviceCommandRepository;
 
+  private final CellLocationResolver cellLocationResolver;
+
   private final TimeProvider time;
 
   public IngestTelemetryUseCase(DeviceRepository deviceRepository,
       TelemetryRepository telemetryRepository,
       DeviceCommandRepository deviceCommandRepository,
+      CellLocationResolver cellLocationResolver,
       TimeProvider time) {
     this.deviceRepository = deviceRepository;
     this.telemetryRepository = telemetryRepository;
     this.deviceCommandRepository = deviceCommandRepository;
+    this.cellLocationResolver = cellLocationResolver;
     this.time = time;
   }
 
@@ -63,16 +70,9 @@ public class IngestTelemetryUseCase
     BatteryLevel battery = input.batteryMv() != null
         ? BatteryLevel.ofMillivolts(input.batteryMv())
         : null;
+    Double temperatureC = input.temperatureC();
 
-    TelemetryData reading;
-    if (input.hasFix()) {
-      Coordinates coordinates = Coordinates.of(input.latitude(), input.longitude());
-      reading = TelemetryData.withFix(device.id(), input.reason(), coordinates,
-          input.accuracy(), battery, input.deviceTime(), now);
-    } else {
-      reading = TelemetryData.withoutFix(device.id(), input.reason(), battery, now);
-    }
-
+    TelemetryData reading = buildReading(device.id(), input, battery, temperatureC, now);
     TelemetryData saved = telemetryRepository.save(reading);
 
     device.markSeen(null, now);
@@ -81,6 +81,29 @@ public class IngestTelemetryUseCase
     acknowledgeOutstandingCommand(device.id(), input.reason(), now);
 
     return Optional.of(TelemetryView.from(saved));
+  }
+
+  private TelemetryData buildReading(UUID deviceId, IngestTelemetryCommand input,
+      BatteryLevel battery, Double temperatureC, Instant now) {
+    if (input.hasFix()) {
+      Coordinates coordinates = Coordinates.of(input.latitude(), input.longitude());
+      return TelemetryData.withFix(deviceId, input.reason(), coordinates,
+          input.accuracy(), battery, temperatureC, input.deviceTime(), now);
+    }
+
+    // No GPS fix: try a cell-tower location fallback when the cell is known.
+    if (input.hasCellTower()) {
+      CellTower tower = CellTower.of(input.mcc(), input.mnc(), input.tac(), input.cellId());
+      Optional<CellLocation> resolved = cellLocationResolver.resolve(tower);
+      if (resolved.isPresent()) {
+        CellLocation location = resolved.get();
+        return TelemetryData.withApproximateLocation(deviceId, input.reason(),
+            location.coordinates(), location.accuracyMeters(), battery, temperatureC, tower, now);
+      }
+      return TelemetryData.withoutLocation(deviceId, input.reason(), battery, temperatureC, tower, now);
+    }
+
+    return TelemetryData.withoutLocation(deviceId, input.reason(), battery, temperatureC, null, now);
   }
 
   private void acknowledgeOutstandingCommand(UUID deviceId, String reason, Instant now) {

@@ -42,6 +42,11 @@ public class FirmwareTelemetryParser {
         hasFix ? p.lon() : null,
         hasFix ? p.acc() : null,
         p.battMv(),
+        p.tempC(),
+        p.mcc(),
+        p.mnc(),
+        p.tac(),
+        p.cellId(),
         parseUtc(p.utc()));
   }
 }

@@ -7,6 +7,8 @@ import java.util.UUID;
 import com.freyja.application.command.CommandView;
 import com.freyja.application.command.RequestDeviceLocationUseCase;
 import com.freyja.application.command.RequestLocationCommand;
+import com.freyja.application.device.DeleteDeviceCommand;
+import com.freyja.application.device.DeleteDeviceUseCase;
 import com.freyja.application.device.DeviceView;
 import com.freyja.application.device.GetDeviceQuery;
 import com.freyja.application.device.GetDeviceUseCase;
@@ -27,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,6 +48,8 @@ public class DeviceController {
 
   private final GetDeviceUseCase getDevice;
 
+  private final DeleteDeviceUseCase deleteDevice;
+
   private final GetLatestTelemetryUseCase getLatestTelemetry;
 
   private final GetDeviceTrajectoryUseCase getDeviceTrajectory;
@@ -54,12 +59,14 @@ public class DeviceController {
   public DeviceController(RegisterDeviceUseCase registerDevice,
       ListDevicesUseCase listDevices,
       GetDeviceUseCase getDevice,
+      DeleteDeviceUseCase deleteDevice,
       GetLatestTelemetryUseCase getLatestTelemetry,
       GetDeviceTrajectoryUseCase getDeviceTrajectory,
       RequestDeviceLocationUseCase requestDeviceLocation) {
     this.registerDevice = registerDevice;
     this.listDevices = listDevices;
     this.getDevice = getDevice;
+    this.deleteDevice = deleteDevice;
     this.getLatestTelemetry = getLatestTelemetry;
     this.getDeviceTrajectory = getDeviceTrajectory;
     this.requestDeviceLocation = requestDeviceLocation;
@@ -83,6 +90,13 @@ public class DeviceController {
   public DeviceView get(@AuthenticationPrincipal AuthenticatedUser user,
       @PathVariable UUID deviceId) {
     return getDevice.execute(new GetDeviceQuery(user.id(), deviceId));
+  }
+
+  @DeleteMapping("/{deviceId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void delete(@AuthenticationPrincipal AuthenticatedUser user,
+      @PathVariable UUID deviceId) {
+    deleteDevice.execute(new DeleteDeviceCommand(user.id(), deviceId));
   }
 
   @GetMapping("/{deviceId}/telemetry/latest")

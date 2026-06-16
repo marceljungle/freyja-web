@@ -36,8 +36,26 @@ public class TelemetryEntity {
   @Column(name = "accuracy")
   private Double accuracy;
 
+  @Column(name = "approximate", nullable = false)
+  private boolean approximate;
+
   @Column(name = "battery_mv")
   private Integer batteryMv;
+
+  @Column(name = "temperature_c")
+  private Double temperatureC;
+
+  @Column(name = "mcc")
+  private Integer mcc;
+
+  @Column(name = "mnc")
+  private Integer mnc;
+
+  @Column(name = "tac")
+  private Integer tac;
+
+  @Column(name = "cell_id")
+  private Integer cellId;
 
   @Column(name = "device_time")
   private Instant deviceTime;
@@ -110,6 +128,54 @@ public class TelemetryEntity {
 
   public void setBatteryMv(Integer batteryMv) {
     this.batteryMv = batteryMv;
+  }
+
+  public boolean isApproximate() {
+    return approximate;
+  }
+
+  public void setApproximate(boolean approximate) {
+    this.approximate = approximate;
+  }
+
+  public Double getTemperatureC() {
+    return temperatureC;
+  }
+
+  public void setTemperatureC(Double temperatureC) {
+    this.temperatureC = temperatureC;
+  }
+
+  public Integer getMcc() {
+    return mcc;
+  }
+
+  public void setMcc(Integer mcc) {
+    this.mcc = mcc;
+  }
+
+  public Integer getMnc() {
+    return mnc;
+  }
+
+  public void setMnc(Integer mnc) {
+    this.mnc = mnc;
+  }
+
+  public Integer getTac() {
+    return tac;
+  }
+
+  public void setTac(Integer tac) {
+    this.tac = tac;
+  }
+
+  public Integer getCellId() {
+    return cellId;
+  }
+
+  public void setCellId(Integer cellId) {
+    this.cellId = cellId;
   }
 
   public Instant getDeviceTime() {

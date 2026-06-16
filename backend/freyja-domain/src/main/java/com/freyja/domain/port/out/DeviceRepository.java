@@ -18,4 +18,7 @@ public interface DeviceRepository {
   List<Device> findByOwnerId(UUID ownerId);
 
   boolean existsByImei(Imei imei);
+
+  /** Deletes a device; related telemetry and commands cascade at the database level. */
+  void deleteById(UUID id);
 }

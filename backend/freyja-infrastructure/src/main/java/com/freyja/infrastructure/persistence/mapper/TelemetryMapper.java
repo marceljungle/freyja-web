@@ -2,6 +2,7 @@ package com.freyja.infrastructure.persistence.mapper;
 
 import com.freyja.domain.model.telemetry.TelemetryData;
 import com.freyja.domain.vo.BatteryLevel;
+import com.freyja.domain.vo.CellTower;
 import com.freyja.domain.vo.Coordinates;
 import com.freyja.infrastructure.persistence.entity.TelemetryEntity;
 
@@ -18,6 +19,10 @@ public final class TelemetryMapper {
     BatteryLevel battery = e.getBatteryMv() != null
         ? BatteryLevel.ofMillivolts(e.getBatteryMv())
         : null;
+    CellTower cellTower = null;
+    if (e.getMcc() != null && e.getMnc() != null && e.getTac() != null && e.getCellId() != null) {
+      cellTower = CellTower.of(e.getMcc(), e.getMnc(), e.getTac(), e.getCellId());
+    }
     return new TelemetryData(
         e.getId(),
         e.getDeviceId(),
@@ -25,7 +30,10 @@ public final class TelemetryMapper {
         e.isHasFix(),
         coordinates,
         e.getAccuracy(),
+        e.isApproximate(),
         battery,
+        e.getTemperatureC(),
+        cellTower,
         e.getDeviceTime(),
         e.getReceivedAt());
   }
@@ -36,12 +44,20 @@ public final class TelemetryMapper {
     e.setDeviceId(t.deviceId());
     e.setReason(t.reason());
     e.setHasFix(t.hasFix());
+    e.setApproximate(t.approximate());
     t.coordinates().ifPresent(c -> {
       e.setLatitude(c.latitude());
       e.setLongitude(c.longitude());
     });
     e.setAccuracy(t.accuracy().orElse(null));
     e.setBatteryMv(t.battery().map(BatteryLevel::millivolts).orElse(null));
+    e.setTemperatureC(t.temperatureC().orElse(null));
+    t.cellTower().ifPresent(cell -> {
+      e.setMcc(cell.mcc());
+      e.setMnc(cell.mnc());
+      e.setTac(cell.tac());
+      e.setCellId(cell.cellId());
+    });
     e.setDeviceTime(t.deviceTime().orElse(null));
     e.setReceivedAt(t.receivedAt());
     return e;
