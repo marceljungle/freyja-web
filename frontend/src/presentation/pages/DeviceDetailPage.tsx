@@ -63,7 +63,7 @@ export function DeviceDetailPage() {
           <p className="font-mono text-xs text-slate-400">{device?.imei}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <DeviceStatus lastSeenAt={device?.lastSeenAt ?? null} />
+          <DeviceStatus lastSeenAt={latest?.receivedAt ?? device?.lastSeenAt ?? null} />
           <BatteryBadge percent={latest?.batteryPercent ?? null} mv={latest?.batteryMv ?? null} />
           <TemperatureBadge celsius={latest?.temperatureC ?? null} />
           <button
