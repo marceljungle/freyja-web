@@ -34,7 +34,7 @@ freyja:
     allowed-origins: ${FREYJA_CORS_ALLOWED_ORIGINS:http://localhost:5173}
   mqtt:
     enabled: ${FREYJA_MQTT_ENABLED:true}
-    url: ${FREYJA_MQTT_URL:tcp://localhost:1883}
+    url: ${FREYJA_MQTT_URL:tcp://localhost:32050}
     client-id: ${FREYJA_MQTT_CLIENT_ID:freyja-backend}
     username: ${FREYJA_MQTT_USERNAME:}
     password: ${FREYJA_MQTT_PASSWORD:}
