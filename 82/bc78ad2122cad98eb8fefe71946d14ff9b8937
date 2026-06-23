@@ -1,0 +1,23 @@
+frontend/src/application/devices/useDevices.ts
+  s_6a328c3896281c::t_623fbe0712b1bd 3,14-15
+frontend/src/presentation/pages/DeviceDetailPage.tsx
+  s_6a328c3896281c::t_623fbe0712b1bd 66
+frontend/src/presentation/components/map/leafletSetup.ts
+  s_6a328c3896281c::t_623fbe0712b1bd 6-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "82bc78ad2122cad98eb8fefe71946d14ff9b8937",
+  "prompts": {},
+  "sessions": {
+    "s_6a328c3896281c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_139a8e104ffe3sbGY4bEd6ToSI",
+        "model": "claude-opus-4.8"
+      },
+      "human_author": "Gigi Marcel Dan <gigimd@ext.zara.com>"
+    }
+  }
+}
