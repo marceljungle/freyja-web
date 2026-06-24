@@ -7,19 +7,25 @@ import com.freyja.domain.exception.ValidationException;
 
 /**
  * Input for {@link IngestTelemetryUseCase}, produced by the MQTT adapter from a
- * firmware payload. When {@code hasFix} is false the coordinates are absent, but
- * the serving-cell identifiers ({@code mcc/mnc/tac/cellId}) may be present for a
- * cell-tower location fallback.
+ * firmware payload. Carries the health metrics ({@code rsrp/trackedSvs/svsUsed/cn0})
+ * that the firmware sends with every report, the serving-cell identifiers for a
+ * fallback location when there is no GPS fix, and the {@code buffered} flag for
+ * historical fixes replayed from the device's offline buffer.
  */
 public record IngestTelemetryCommand(
     String imei,
     String reason,
     boolean hasFix,
+    boolean buffered,
     Double latitude,
     Double longitude,
     Double accuracy,
     Integer batteryMv,
     Double temperatureC,
+    Integer rsrp,
+    Integer trackedSvs,
+    Integer svsUsed,
+    Double cn0,
     Integer mcc,
     Integer mnc,
     Integer tac,

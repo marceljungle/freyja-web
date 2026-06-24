@@ -34,15 +34,23 @@ public class FirmwareTelemetryParser {
   public IngestTelemetryCommand parse(String json) throws JsonProcessingException {
     FirmwareTelemetryPayload p = objectMapper.readValue(json, FirmwareTelemetryPayload.class);
     boolean hasFix = Boolean.TRUE.equals(p.fix());
+    boolean buffered = Boolean.TRUE.equals(p.buffered());
+    // The firmware reports rsrp 0 when unknown; treat it as "no reading".
+    Integer rsrp = p.rsrp() != null && p.rsrp() != 0 ? p.rsrp() : null;
     return new IngestTelemetryCommand(
         p.id(),
         p.reason(),
         hasFix,
+        buffered,
         hasFix ? p.lat() : null,
         hasFix ? p.lon() : null,
         hasFix ? p.acc() : null,
         p.battMv(),
         p.tempC(),
+        rsrp,
+        p.trackedSvs(),
+        p.svsUsed(),
+        p.cn0(),
         p.mcc(),
         p.mnc(),
         p.tac(),

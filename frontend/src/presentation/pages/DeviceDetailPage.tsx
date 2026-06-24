@@ -8,6 +8,7 @@ import { DeviceMap } from "@/presentation/components/map/DeviceMap";
 import { BatteryBadge } from "@/presentation/components/BatteryBadge";
 import { TemperatureBadge } from "@/presentation/components/TemperatureBadge";
 import { DeviceStatus } from "@/presentation/components/DeviceStatus";
+import { DeviceHealth } from "@/presentation/components/DeviceHealth";
 import { DeleteDeviceDialog } from "@/presentation/components/DeleteDeviceDialog";
 import {
   DEFAULT_RANGE,
@@ -136,6 +137,8 @@ export function DeviceDetailPage() {
               <p className="text-slate-400">No telemetry received yet.</p>
             )}
           </div>
+
+          <DeviceHealth latest={latest ?? null} />
         </aside>
       </div>
 

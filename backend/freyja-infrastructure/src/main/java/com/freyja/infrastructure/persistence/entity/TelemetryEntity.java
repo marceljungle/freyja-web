@@ -45,6 +45,21 @@ public class TelemetryEntity {
   @Column(name = "temperature_c")
   private Double temperatureC;
 
+  @Column(name = "rsrp_dbm")
+  private Integer rsrpDbm;
+
+  @Column(name = "tracked_svs")
+  private Integer trackedSvs;
+
+  @Column(name = "svs_used")
+  private Integer svsUsed;
+
+  @Column(name = "cn0")
+  private Double cn0;
+
+  @Column(name = "buffered", nullable = false)
+  private boolean buffered;
+
   @Column(name = "mcc")
   private Integer mcc;
 
@@ -144,6 +159,46 @@ public class TelemetryEntity {
 
   public void setTemperatureC(Double temperatureC) {
     this.temperatureC = temperatureC;
+  }
+
+  public Integer getRsrpDbm() {
+    return rsrpDbm;
+  }
+
+  public void setRsrpDbm(Integer rsrpDbm) {
+    this.rsrpDbm = rsrpDbm;
+  }
+
+  public Integer getTrackedSvs() {
+    return trackedSvs;
+  }
+
+  public void setTrackedSvs(Integer trackedSvs) {
+    this.trackedSvs = trackedSvs;
+  }
+
+  public Integer getSvsUsed() {
+    return svsUsed;
+  }
+
+  public void setSvsUsed(Integer svsUsed) {
+    this.svsUsed = svsUsed;
+  }
+
+  public Double getCn0() {
+    return cn0;
+  }
+
+  public void setCn0(Double cn0) {
+    this.cn0 = cn0;
+  }
+
+  public boolean isBuffered() {
+    return buffered;
+  }
+
+  public void setBuffered(boolean buffered) {
+    this.buffered = buffered;
   }
 
   public Integer getMcc() {

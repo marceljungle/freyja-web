@@ -53,8 +53,8 @@ class IngestTelemetryUseCaseTest {
 
   private static IngestTelemetryCommand command(boolean hasFix, Double lat, Double lon,
       Double acc, Integer battMv, Double tempC, Integer mcc, Integer mnc, Integer tac, Integer cellId) {
-    return new IngestTelemetryCommand(IMEI, "motion", hasFix, lat, lon, acc, battMv, tempC,
-        mcc, mnc, tac, cellId, null);
+    return new IngestTelemetryCommand(IMEI, "motion", hasFix, false, lat, lon, acc, battMv, tempC,
+        null, null, null, null, mcc, mnc, tac, cellId, null);
   }
 
   @Test
@@ -69,14 +69,14 @@ class IngestTelemetryUseCaseTest {
   }
 
   @Test
-  void storesFixWithTemperatureAndMarksDeviceSeen() {
+  void storesFixWithTemperatureHealthAndMarksDeviceSeen() {
     registerDevice();
     when(time.now()).thenReturn(Instant.parse("2026-06-14T10:00:00Z"));
     when(telemetryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
     Optional<TelemetryView> result = useCase.execute(new IngestTelemetryCommand(
-        IMEI, "motion", true, 40.4168, -3.7038, 6.0, 3850, 24.5,
-        null, null, null, null, Instant.parse("2026-06-14T09:30:00Z")));
+        IMEI, "motion", true, false, 40.4168, -3.7038, 6.0, 3850, 24.5,
+        -98, 12, 7, 43.1, null, null, null, null, Instant.parse("2026-06-14T09:30:00Z")));
 
     assertTrue(result.isPresent());
     TelemetryView view = result.get();
@@ -85,6 +85,10 @@ class IngestTelemetryUseCaseTest {
     assertEquals(40.4168, view.latitude(), 1e-6);
     assertEquals(61, view.batteryPercent());
     assertEquals(24.5, view.temperatureC(), 1e-6);
+    assertEquals(-98, view.rsrp());
+    assertEquals(12, view.trackedSvs());
+    assertEquals(7, view.svsUsed());
+    assertEquals(43.1, view.cn0(), 1e-6);
     verify(deviceRepository).save(any());
   }
 
