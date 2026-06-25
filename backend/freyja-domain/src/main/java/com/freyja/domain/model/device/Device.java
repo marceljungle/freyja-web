@@ -29,10 +29,12 @@ public class Device {
 
   private Instant lastSeenAt;
 
+  private Instant liveModeUntil;
+
   private Instant updatedAt;
 
   public Device(UUID id, Imei imei, String name, String fwVersion, UUID ownerId,
-      NetworkConfig networkConfig, Instant lastSeenAt,
+      NetworkConfig networkConfig, Instant lastSeenAt, Instant liveModeUntil,
       Instant createdAt, Instant updatedAt) {
     this.id = Objects.requireNonNull(id, "id");
     this.imei = Objects.requireNonNull(imei, "imei");
@@ -41,6 +43,7 @@ public class Device {
     this.ownerId = Objects.requireNonNull(ownerId, "ownerId");
     this.networkConfig = networkConfig;
     this.lastSeenAt = lastSeenAt;
+    this.liveModeUntil = liveModeUntil;
     this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
     this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt");
   }
@@ -51,7 +54,7 @@ public class Device {
   public static Device register(Imei imei, String name, String fwVersion, UUID ownerId,
       NetworkConfig networkConfig, Instant now) {
     return new Device(UUID.randomUUID(), imei, name, fwVersion, ownerId,
-        networkConfig, null, now, now);
+        networkConfig, null, null, now, now);
   }
 
   private static String normaliseName(String name) {
@@ -81,6 +84,21 @@ public class Device {
     this.updatedAt = now;
   }
 
+  /**
+   * Mark live (real-time) mode as active until {@code until}. Mirrors the
+   * firmware auto-off deadline so the UI can show an accurate, self-expiring
+   * toggle state.
+   */
+  public void enableLiveMode(Instant until, Instant now) {
+    this.liveModeUntil = until;
+    this.updatedAt = now;
+  }
+
+  public void disableLiveMode(Instant now) {
+    this.liveModeUntil = null;
+    this.updatedAt = now;
+  }
+
   public UUID id() {
     return id;
   }
@@ -107,6 +125,10 @@ public class Device {
 
   public Instant lastSeenAt() {
     return lastSeenAt;
+  }
+
+  public Optional<Instant> liveModeUntil() {
+    return Optional.ofNullable(liveModeUntil);
   }
 
   public Instant createdAt() {

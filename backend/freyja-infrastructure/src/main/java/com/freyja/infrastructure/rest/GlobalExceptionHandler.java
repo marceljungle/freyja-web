@@ -12,10 +12,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -63,6 +67,21 @@ public class GlobalExceptionHandler {
         .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
         .collect(Collectors.joining("; "));
     return build(HttpStatus.BAD_REQUEST, message.isBlank() ? "Validation failed" : message, request);
+  }
+
+  /**
+   * Spring MVC exceptions (no handler for the route -> 404, wrong method -> 405,
+   * etc.) carry their own status via the {@link ErrorResponse} contract; respect
+   * it instead of letting the catch-all turn them into 500s.
+   */
+  @ExceptionHandler({NoResourceFoundException.class, HttpRequestMethodNotSupportedException.class})
+  public ResponseEntity<ApiError> handleSpringMvc(ErrorResponse ex, HttpServletRequest request) {
+    HttpStatusCode statusCode = ex.getStatusCode();
+    HttpStatus status = HttpStatus.resolve(statusCode.value());
+    if (status == null) {
+      status = HttpStatus.INTERNAL_SERVER_ERROR;
+    }
+    return build(status, status.getReasonPhrase(), request);
   }
 
   @ExceptionHandler(Exception.class)

@@ -15,7 +15,6 @@ import java.util.UUID;
 
 import com.freyja.domain.model.device.Device;
 import com.freyja.domain.port.out.CellLocationResolver;
-import com.freyja.domain.port.out.DeviceCommandRepository;
 import com.freyja.domain.port.out.DeviceRepository;
 import com.freyja.domain.port.out.TelemetryRepository;
 import com.freyja.domain.port.out.TimeProvider;
@@ -38,9 +37,6 @@ class IngestTelemetryUseCaseTest {
 
   @Mock
   TelemetryRepository telemetryRepository;
-
-  @Mock
-  DeviceCommandRepository commandRepository;
 
   @Mock
   CellLocationResolver cellLocationResolver;

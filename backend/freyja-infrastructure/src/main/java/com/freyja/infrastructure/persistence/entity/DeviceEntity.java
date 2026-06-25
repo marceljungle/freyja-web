@@ -39,6 +39,9 @@ public class DeviceEntity {
   @Column(name = "last_seen_at")
   private Instant lastSeenAt;
 
+  @Column(name = "live_mode_until")
+  private Instant liveModeUntil;
+
   @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
@@ -118,6 +121,14 @@ public class DeviceEntity {
 
   public void setLastSeenAt(Instant lastSeenAt) {
     this.lastSeenAt = lastSeenAt;
+  }
+
+  public Instant getLiveModeUntil() {
+    return liveModeUntil;
+  }
+
+  public void setLiveModeUntil(Instant liveModeUntil) {
+    this.liveModeUntil = liveModeUntil;
   }
 
   public Instant getCreatedAt() {

@@ -15,6 +15,7 @@ public record DeviceView(
     String brokerIp,
     Integer brokerPort,
     Instant lastSeenAt,
+    Instant liveModeUntil,
     Instant createdAt) {
 
   public static DeviceView from(Device device) {
@@ -28,6 +29,7 @@ public record DeviceView(
         cfg != null ? cfg.brokerIp() : null,
         cfg != null ? cfg.brokerPort() : null,
         device.lastSeenAt(),
+        device.liveModeUntil().orElse(null),
         device.createdAt());
   }
 }

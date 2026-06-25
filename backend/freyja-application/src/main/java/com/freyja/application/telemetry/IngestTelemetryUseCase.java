@@ -1,18 +1,14 @@
 package com.freyja.application.telemetry;
 
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.Optional;
 import java.util.UUID;
 
 import com.freyja.application.common.AbstractUseCase;
 import com.freyja.domain.exception.ValidationException;
-import com.freyja.domain.model.command.CommandStatus;
-import com.freyja.domain.model.command.DeviceCommand;
 import com.freyja.domain.model.device.Device;
 import com.freyja.domain.model.telemetry.TelemetryData;
 import com.freyja.domain.port.out.CellLocationResolver;
-import com.freyja.domain.port.out.DeviceCommandRepository;
 import com.freyja.domain.port.out.DeviceRepository;
 import com.freyja.domain.port.out.TelemetryRepository;
 import com.freyja.domain.port.out.TimeProvider;
@@ -28,13 +24,9 @@ import org.springframework.stereotype.Service;
 public class IngestTelemetryUseCase
     extends AbstractUseCase<IngestTelemetryCommand, Optional<TelemetryView>> {
 
-  private static final String DEFAULT_WAKE_REASON = "motion";
-
   private final DeviceRepository deviceRepository;
 
   private final TelemetryRepository telemetryRepository;
-
-  private final DeviceCommandRepository deviceCommandRepository;
 
   private final CellLocationResolver cellLocationResolver;
 
@@ -42,12 +34,10 @@ public class IngestTelemetryUseCase
 
   public IngestTelemetryUseCase(DeviceRepository deviceRepository,
       TelemetryRepository telemetryRepository,
-      DeviceCommandRepository deviceCommandRepository,
       CellLocationResolver cellLocationResolver,
       TimeProvider time) {
     this.deviceRepository = deviceRepository;
     this.telemetryRepository = telemetryRepository;
-    this.deviceCommandRepository = deviceCommandRepository;
     this.cellLocationResolver = cellLocationResolver;
     this.time = time;
   }
@@ -80,8 +70,6 @@ public class IngestTelemetryUseCase
     device.markSeen(null, now);
     deviceRepository.save(device);
 
-    acknowledgeOutstandingCommand(device.id(), input.reason(), now);
-
     return Optional.of(TelemetryView.from(saved));
   }
 
@@ -106,18 +94,5 @@ public class IngestTelemetryUseCase
     }
 
     return TelemetryData.withoutLocation(deviceId, input.reason(), battery, temperatureC, health, null, now);
-  }
-
-  private void acknowledgeOutstandingCommand(UUID deviceId, String reason, Instant now) {
-    if (reason == null || reason.equalsIgnoreCase(DEFAULT_WAKE_REASON)) {
-      return; // an ordinary motion wake, not a response to a command
-    }
-    deviceCommandRepository.findByDeviceId(deviceId).stream()
-        .filter(c -> c.status() == CommandStatus.SENT)
-        .max(Comparator.comparing(DeviceCommand::createdAt))
-        .ifPresent(command -> {
-          command.markAcknowledged(now);
-          deviceCommandRepository.save(command);
-        });
   }
 }

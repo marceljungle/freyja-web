@@ -46,6 +46,9 @@ freyja:
     api-key: ${FREYJA_OPENCELLID_API_KEY:}
     base-url: ${FREYJA_OPENCELLID_BASE_URL:https://opencellid.org}
     timeout-ms: ${FREYJA_OPENCELLID_TIMEOUT_MS:3000}
+  live-mode:
+    # Backend-side mirror of the firmware live-mode auto-off (FREYJA_LIVE_MAX_DURATION_SEC).
+    max-duration-sec: ${FREYJA_LIVE_MODE_MAX_DURATION_SEC:600}
 
 logging:
   level:

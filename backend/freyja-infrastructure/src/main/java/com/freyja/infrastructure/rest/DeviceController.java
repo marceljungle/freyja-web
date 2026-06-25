@@ -4,9 +4,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import com.freyja.application.command.CommandView;
-import com.freyja.application.command.RequestDeviceLocationUseCase;
-import com.freyja.application.command.RequestLocationCommand;
 import com.freyja.application.device.DeleteDeviceCommand;
 import com.freyja.application.device.DeleteDeviceUseCase;
 import com.freyja.application.device.DeviceView;
@@ -16,11 +13,14 @@ import com.freyja.application.device.ListDevicesQuery;
 import com.freyja.application.device.ListDevicesUseCase;
 import com.freyja.application.device.RegisterDeviceCommand;
 import com.freyja.application.device.RegisterDeviceUseCase;
+import com.freyja.application.device.SetLiveModeCommand;
+import com.freyja.application.device.SetLiveModeUseCase;
 import com.freyja.application.telemetry.GetDeviceTrajectoryUseCase;
 import com.freyja.application.telemetry.GetLatestTelemetryQuery;
 import com.freyja.application.telemetry.GetLatestTelemetryUseCase;
 import com.freyja.application.telemetry.GetTrajectoryQuery;
 import com.freyja.application.telemetry.TelemetryView;
+import com.freyja.infrastructure.rest.dto.LiveModeRequest;
 import com.freyja.infrastructure.rest.dto.RegisterDeviceRequest;
 import com.freyja.infrastructure.security.AuthenticatedUser;
 import jakarta.validation.Valid;
@@ -54,7 +54,7 @@ public class DeviceController {
 
   private final GetDeviceTrajectoryUseCase getDeviceTrajectory;
 
-  private final RequestDeviceLocationUseCase requestDeviceLocation;
+  private final SetLiveModeUseCase setLiveMode;
 
   public DeviceController(RegisterDeviceUseCase registerDevice,
       ListDevicesUseCase listDevices,
@@ -62,14 +62,14 @@ public class DeviceController {
       DeleteDeviceUseCase deleteDevice,
       GetLatestTelemetryUseCase getLatestTelemetry,
       GetDeviceTrajectoryUseCase getDeviceTrajectory,
-      RequestDeviceLocationUseCase requestDeviceLocation) {
+      SetLiveModeUseCase setLiveMode) {
     this.registerDevice = registerDevice;
     this.listDevices = listDevices;
     this.getDevice = getDevice;
     this.deleteDevice = deleteDevice;
     this.getLatestTelemetry = getLatestTelemetry;
     this.getDeviceTrajectory = getDeviceTrajectory;
-    this.requestDeviceLocation = requestDeviceLocation;
+    this.setLiveMode = setLiveMode;
   }
 
   @PostMapping
@@ -117,10 +117,11 @@ public class DeviceController {
     return getDeviceTrajectory.execute(new GetTrajectoryQuery(user.id(), deviceId, from, to, limit));
   }
 
-  @PostMapping("/{deviceId}/commands/request-location")
-  @ResponseStatus(HttpStatus.ACCEPTED)
-  public CommandView requestLocation(@AuthenticationPrincipal AuthenticatedUser user,
-      @PathVariable UUID deviceId) {
-    return requestDeviceLocation.execute(new RequestLocationCommand(user.id(), deviceId));
+  @PostMapping("/{deviceId}/live-mode")
+  public DeviceView setLiveMode(@AuthenticationPrincipal AuthenticatedUser user,
+      @PathVariable UUID deviceId,
+      @Valid @RequestBody LiveModeRequest request) {
+    return setLiveMode.execute(
+        new SetLiveModeCommand(user.id(), deviceId, request.enabled(), request.interval()));
   }
 }

@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDevice } from "@/application/devices/useDevices";
 import { useDeleteDevice } from "@/application/devices/useDeleteDevice";
+import { isLiveModeActive, useSetLiveMode } from "@/application/devices/useSetLiveMode";
 import { useLatestTelemetry, useTrajectory } from "@/application/telemetry/useTelemetry";
-import { useRequestLocation } from "@/application/command/useRequestLocation";
 import { DeviceMap } from "@/presentation/components/map/DeviceMap";
 import { BatteryBadge } from "@/presentation/components/BatteryBadge";
 import { TemperatureBadge } from "@/presentation/components/TemperatureBadge";
@@ -37,8 +37,10 @@ export function DeviceDetailPage() {
   const { data: device } = useDevice(deviceId);
   const { data: latest } = useLatestTelemetry(deviceId);
   const { data: trajectory } = useTrajectory(deviceId, trajectoryQuery);
-  const requestLocation = useRequestLocation(deviceId);
+  const setLiveMode = useSetLiveMode(deviceId);
   const deleteDevice = useDeleteDevice();
+
+  const liveActive = isLiveModeActive(device?.liveModeUntil);
 
   // A reading is "located" when it has a GPS fix or a cell-tower approximation.
   const located = latest && (latest.hasFix || latest.approximate) && latest.latitude != null
@@ -59,21 +61,39 @@ export function DeviceDetailPage() {
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-800">{device?.name ?? "Device"}</h1>
-          <p className="font-mono text-xs text-slate-400">{device?.imei}</p>
+        <div className="flex items-center gap-2">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-800">{device?.name ?? "Device"}</h1>
+            <p className="font-mono text-xs text-slate-400">{device?.imei}</p>
+          </div>
+          {liveActive && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-600">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+              LIVE
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <DeviceStatus lastSeenAt={latest?.receivedAt ?? device?.lastSeenAt ?? null} />
           <BatteryBadge percent={latest?.batteryPercent ?? null} mv={latest?.batteryMv ?? null} />
           <TemperatureBadge celsius={latest?.temperatureC ?? null} />
-          <button
-            onClick={() => requestLocation.mutate()}
-            disabled={requestLocation.isPending}
-            className="btn-primary"
-          >
-            {requestLocation.isPending ? "Requesting…" : "Request location"}
-          </button>
+          {liveActive ? (
+            <button
+              onClick={() => setLiveMode.mutate({ enabled: false })}
+              disabled={setLiveMode.isPending}
+              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {setLiveMode.isPending ? "Stopping…" : "Stop live mode"}
+            </button>
+          ) : (
+            <button
+              onClick={() => setLiveMode.mutate({ enabled: true })}
+              disabled={setLiveMode.isPending}
+              className="btn-primary"
+            >
+              {setLiveMode.isPending ? "Starting…" : "Start live mode"}
+            </button>
+          )}
           <button
             onClick={() => setShowDelete(true)}
             className="rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
@@ -83,14 +103,15 @@ export function DeviceDetailPage() {
         </div>
       </div>
 
-      {requestLocation.isSuccess && (
-        <p className="mb-3 rounded-md bg-emerald-50 p-2 text-sm text-emerald-700">
-          Location request queued. The device will report when it next wakes.
+      {liveActive && (
+        <p className="mb-3 rounded-md bg-red-50 p-2 text-sm text-red-700">
+          Live mode active — the device is streaming fixes (~every 10–30 s). Auto-stops by{" "}
+          {formatDateTime(device?.liveModeUntil)} unless you stop it sooner.
         </p>
       )}
-      {requestLocation.isError && (
+      {setLiveMode.isError && (
         <p className="mb-3 rounded-md bg-red-50 p-2 text-sm text-red-700">
-          {apiErrorMessage(requestLocation.error, "Failed to queue the command.")}
+          {apiErrorMessage(setLiveMode.error, "Failed to change live mode.")}
         </p>
       )}
 

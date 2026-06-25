@@ -20,4 +20,12 @@ export const deviceApi = {
   async remove(deviceId: string): Promise<void> {
     await apiClient.delete(`/devices/${deviceId}`);
   },
+
+  async setLiveMode(
+    deviceId: string,
+    input: { enabled: boolean; interval?: number },
+  ): Promise<Device> {
+    const { data } = await apiClient.post<Device>(`/devices/${deviceId}/live-mode`, input);
+    return data;
+  },
 };

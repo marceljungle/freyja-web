@@ -7,6 +7,7 @@ export interface Device {
   brokerIp: string | null;
   brokerPort: number | null;
   lastSeenAt: string | null;
+  liveModeUntil: string | null;
   createdAt: string;
 }
 
