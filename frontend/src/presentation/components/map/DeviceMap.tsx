@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Circle, MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from "react-leaflet";
 import type { LatLngExpression } from "leaflet";
 import type { Telemetry } from "@/domain/telemetry";
@@ -11,11 +11,16 @@ const FOCUS_ZOOM = 15;
 const APPROX_ZOOM = 11;
 const DEFAULT_APPROX_RADIUS_M = 1000;
 
-function Recenter({ center, zoom }: { center: LatLngExpression | null; zoom: number }) {
+// Recenters only when the target coordinates (or zoom) actually change, so a
+// no-fix report keeps the last position and manual pan/zoom isn't overridden
+// on every telemetry poll.
+function Recenter({ lat, lon, zoom }: { lat: number | null; lon: number | null; zoom: number }) {
   const map = useMap();
   useEffect(() => {
-    if (center) map.setView(center, zoom, { animate: true });
-  }, [center, zoom, map]);
+    if (lat != null && lon != null) {
+      map.setView([lat, lon], zoom, { animate: true });
+    }
+  }, [lat, lon, zoom, map]);
   return null;
 }
 
@@ -26,7 +31,7 @@ interface Props {
 
 export function DeviceMap({ latest, trajectory = [] }: Props) {
   // Chronological list of GPS fixes (backend returns newest-first).
-  const points = useMemo<LatLngExpression[]>(
+  const points = useMemo<[number, number][]>(
     () =>
       [...trajectory]
         .reverse()
@@ -35,16 +40,40 @@ export function DeviceMap({ latest, trajectory = [] }: Props) {
     [trajectory],
   );
 
-  const hasCoords = latest != null && latest.latitude != null && latest.longitude != null;
-  const fixPoint: LatLngExpression | null =
-    hasCoords && latest!.hasFix ? [latest!.latitude!, latest!.longitude!] : null;
-  const approxPoint: LatLngExpression | null =
-    hasCoords && !latest!.hasFix && latest!.approximate
-      ? [latest!.latitude!, latest!.longitude!]
+  const livePoint: [number, number] | null =
+    latest != null && latest.latitude != null && latest.longitude != null
+      ? [latest.latitude, latest.longitude]
       : null;
+  const liveFix = livePoint != null && (latest?.hasFix ?? false);
+  const liveApprox = livePoint != null && !(latest?.hasFix ?? false) && (latest?.approximate ?? false);
 
-  const center = fixPoint ?? approxPoint ?? points[points.length - 1] ?? null;
-  const zoom = fixPoint ? FOCUS_ZOOM : approxPoint ? APPROX_ZOOM : DEFAULT_ZOOM;
+  // Remember the last position we actually had coordinates for, so a no-fix
+  // report keeps the map there instead of zooming out to the world.
+  const lastKnownRef = useRef<[number, number] | null>(null);
+  useEffect(() => {
+    if (latest?.latitude != null && latest?.longitude != null) {
+      lastKnownRef.current = [latest.latitude, latest.longitude];
+    }
+  }, [latest?.latitude, latest?.longitude]);
+
+  const lastKnownPoint = lastKnownRef.current ?? (points.length > 0 ? points[points.length - 1] : null);
+
+  // Center target + zoom: never fall back to the world view when we have any
+  // known position — a report without a fix should keep the last location.
+  let centerLat: number | null = null;
+  let centerLon: number | null = null;
+  let zoom = DEFAULT_ZOOM;
+  if (livePoint) {
+    [centerLat, centerLon] = livePoint;
+    zoom = liveApprox ? APPROX_ZOOM : FOCUS_ZOOM;
+  } else if (lastKnownPoint) {
+    [centerLat, centerLon] = lastKnownPoint;
+    zoom = FOCUS_ZOOM;
+  }
+
+  // When the latest report itself has no location, show a muted marker at the
+  // last known position.
+  const stalePoint = livePoint == null ? lastKnownPoint : null;
 
   return (
     <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} scrollWheelZoom className="h-full w-full">
@@ -52,10 +81,10 @@ export function DeviceMap({ latest, trajectory = [] }: Props) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <Recenter center={center} zoom={center ? zoom : DEFAULT_ZOOM} />
+      <Recenter lat={centerLat} lon={centerLon} zoom={zoom} />
       {points.length > 1 && <Polyline positions={points} pathOptions={{ color: "#1f63c4", weight: 3 }} />}
-      {fixPoint && (
-        <Marker position={fixPoint}>
+      {liveFix && livePoint && (
+        <Marker position={livePoint}>
           <Popup>
             <div className="text-xs">
               <div className="font-semibold">Last fix (GPS)</div>
@@ -65,9 +94,9 @@ export function DeviceMap({ latest, trajectory = [] }: Props) {
           </Popup>
         </Marker>
       )}
-      {approxPoint && (
+      {liveApprox && livePoint && (
         <Circle
-          center={approxPoint}
+          center={livePoint}
           radius={latest?.accuracy ?? DEFAULT_APPROX_RADIUS_M}
           pathOptions={{ color: "#2f7be0", weight: 1, fillColor: "#2f7be0", fillOpacity: 0.15 }}
         >
@@ -80,6 +109,17 @@ export function DeviceMap({ latest, trajectory = [] }: Props) {
             </div>
           </Popup>
         </Circle>
+      )}
+      {stalePoint && (
+        <Marker position={stalePoint} opacity={0.6}>
+          <Popup>
+            <div className="text-xs">
+              <div className="font-semibold">Last known position</div>
+              <div>The latest report had no GPS fix.</div>
+              <div>{formatDateTime(latest?.receivedAt)}</div>
+            </div>
+          </Popup>
+        </Marker>
       )}
     </MapContainer>
   );
