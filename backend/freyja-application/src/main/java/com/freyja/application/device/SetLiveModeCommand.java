@@ -8,11 +8,13 @@ import com.freyja.domain.exception.ValidationException;
 /**
  * Input for {@link SetLiveModeUseCase}: toggle real-time streaming on a device.
  *
- * @param enabled  true sends {@code live_on}, false sends {@code live_off}.
- * @param interval optional seconds between live updates (null = firmware default).
+ * @param enabled    true sends {@code live_on}, false sends {@code live_off}.
+ * @param persistent when enabled, true keeps it running until stopped (keep-alive);
+ *                   false is a single firmware-bounded window.
+ * @param interval   optional seconds between live updates (null = firmware default).
  */
-public record SetLiveModeCommand(UUID ownerId, UUID deviceId, boolean enabled, Integer interval)
-    implements UseCaseInput {
+public record SetLiveModeCommand(UUID ownerId, UUID deviceId, boolean enabled, boolean persistent,
+    Integer interval) implements UseCaseInput {
 
   private static final int MAX_INTERVAL_SEC = 3600;
 

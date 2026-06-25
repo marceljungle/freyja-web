@@ -122,6 +122,7 @@ public class DeviceController {
       @PathVariable UUID deviceId,
       @Valid @RequestBody LiveModeRequest request) {
     return setLiveMode.execute(
-        new SetLiveModeCommand(user.id(), deviceId, request.enabled(), request.interval()));
+        new SetLiveModeCommand(user.id(), deviceId, request.enabled(), request.persistent(),
+            request.interval()));
   }
 }

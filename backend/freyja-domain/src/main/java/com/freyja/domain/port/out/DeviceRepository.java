@@ -17,8 +17,8 @@ public interface DeviceRepository {
 
   List<Device> findByOwnerId(UUID ownerId);
 
-  /** All devices that currently have live mode enabled (for the keep-alive). */
-  List<Device> findByLiveModeEnabled();
+  /** Devices with persistent live mode enabled (for the keep-alive). */
+  List<Device> findByLivePersistent();
 
   boolean existsByImei(Imei imei);
 

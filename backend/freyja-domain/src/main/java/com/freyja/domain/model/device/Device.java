@@ -29,15 +29,17 @@ public class Device {
 
   private Instant lastSeenAt;
 
-  private boolean liveModeEnabled;
+  private Instant liveModeUntil;
+
+  private boolean livePersistent;
 
   private Integer liveModeInterval;
 
   private Instant updatedAt;
 
   public Device(UUID id, Imei imei, String name, String fwVersion, UUID ownerId,
-      NetworkConfig networkConfig, Instant lastSeenAt, boolean liveModeEnabled,
-      Integer liveModeInterval, Instant createdAt, Instant updatedAt) {
+      NetworkConfig networkConfig, Instant lastSeenAt, Instant liveModeUntil,
+      boolean livePersistent, Integer liveModeInterval, Instant createdAt, Instant updatedAt) {
     this.id = Objects.requireNonNull(id, "id");
     this.imei = Objects.requireNonNull(imei, "imei");
     this.name = normaliseName(name);
@@ -45,7 +47,8 @@ public class Device {
     this.ownerId = Objects.requireNonNull(ownerId, "ownerId");
     this.networkConfig = networkConfig;
     this.lastSeenAt = lastSeenAt;
-    this.liveModeEnabled = liveModeEnabled;
+    this.liveModeUntil = liveModeUntil;
+    this.livePersistent = livePersistent;
     this.liveModeInterval = liveModeInterval;
     this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
     this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt");
@@ -57,7 +60,7 @@ public class Device {
   public static Device register(Imei imei, String name, String fwVersion, UUID ownerId,
       NetworkConfig networkConfig, Instant now) {
     return new Device(UUID.randomUUID(), imei, name, fwVersion, ownerId,
-        networkConfig, null, false, null, now, now);
+        networkConfig, null, null, false, null, now, now);
   }
 
   private static String normaliseName(String name) {
@@ -88,22 +91,31 @@ public class Device {
   }
 
   /**
-   * Enable live (real-time) mode. It stays on until {@link #disableLiveMode}
-   * (a backend keep-alive re-sends {@code live_on} so the firmware never auto-offs);
-   * the firmware's own low-battery cutoff is the hardware safety net.
+   * Enable live (real-time) mode.
    *
-   * @param interval optional seconds between live updates (null = firmware default).
+   * @param persistent when true the session runs until explicitly stopped (a
+   *                   backend keep-alive re-sends {@code live_on}); when false it
+   *                   is a single bounded window that the firmware auto-offs.
+   * @param until      bounded-mode expiry (ignored/cleared when persistent).
+   * @param interval   optional seconds between live updates (null = firmware default).
    */
-  public void enableLiveMode(Integer interval, Instant now) {
-    this.liveModeEnabled = true;
+  public void enableLiveMode(boolean persistent, Instant until, Integer interval, Instant now) {
+    this.livePersistent = persistent;
+    this.liveModeUntil = persistent ? null : until;
     this.liveModeInterval = interval;
     this.updatedAt = now;
   }
 
   public void disableLiveMode(Instant now) {
-    this.liveModeEnabled = false;
+    this.livePersistent = false;
+    this.liveModeUntil = null;
     this.liveModeInterval = null;
     this.updatedAt = now;
+  }
+
+  /** True while live mode is active: persistent, or within a bounded window. */
+  public boolean isLiveModeActive(Instant now) {
+    return livePersistent || (liveModeUntil != null && liveModeUntil.isAfter(now));
   }
 
   public UUID id() {
@@ -134,8 +146,12 @@ public class Device {
     return lastSeenAt;
   }
 
-  public boolean liveModeEnabled() {
-    return liveModeEnabled;
+  public boolean livePersistent() {
+    return livePersistent;
+  }
+
+  public Optional<Instant> liveModeUntil() {
+    return Optional.ofNullable(liveModeUntil);
   }
 
   public Optional<Integer> liveModeInterval() {

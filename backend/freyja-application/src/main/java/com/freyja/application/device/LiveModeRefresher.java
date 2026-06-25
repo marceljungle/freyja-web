@@ -9,11 +9,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Keeps live (real-time) mode persistent: the firmware auto-offs after a short
+ * Keeps <b>persistent</b> live mode running: the firmware auto-offs after a short
  * window as a battery safeguard, so this re-publishes {@code live_on} to every
- * device that has live mode enabled, refreshing the firmware's deadline. Driven
+ * device with persistent live mode on, refreshing the firmware's deadline. Driven
  * by a scheduler in the infrastructure layer (at an interval shorter than the
- * firmware auto-off).
+ * firmware auto-off). Bounded live sessions are not touched — they expire on
+ * their own.
  */
 @Service
 public class LiveModeRefresher {
@@ -31,7 +32,7 @@ public class LiveModeRefresher {
 
   @Transactional(readOnly = true)
   public void refreshActiveSessions() {
-    for (Device device : deviceRepository.findByLiveModeEnabled()) {
+    for (Device device : deviceRepository.findByLivePersistent()) {
       try {
         mqttPublisher.publishToDevice(device.imei(), LiveModeCommands.liveOn(device.liveModeInterval().orElse(null)));
       } catch (RuntimeException ex) {

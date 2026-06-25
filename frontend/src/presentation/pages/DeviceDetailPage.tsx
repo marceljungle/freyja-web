@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDevice } from "@/application/devices/useDevices";
 import { useDeleteDevice } from "@/application/devices/useDeleteDevice";
-import { useSetLiveMode } from "@/application/devices/useSetLiveMode";
+import { isLiveModeActive, useSetLiveMode } from "@/application/devices/useSetLiveMode";
 import { useLatestTelemetry, useTrajectory } from "@/application/telemetry/useTelemetry";
 import { DeviceMap } from "@/presentation/components/map/DeviceMap";
 import { BatteryBadge } from "@/presentation/components/BatteryBadge";
@@ -23,6 +23,7 @@ export function DeviceDetailPage() {
   const navigate = useNavigate();
   const [range, setRange] = useState(DEFAULT_RANGE);
   const [showDelete, setShowDelete] = useState(false);
+  const [keepOn, setKeepOn] = useState(false);
 
   // Recompute the trajectory time window only when the preset changes or every
   // 30s — NOT on every render. Otherwise trajectoryRange()'s `to = now` would
@@ -40,7 +41,8 @@ export function DeviceDetailPage() {
   const setLiveMode = useSetLiveMode(deviceId);
   const deleteDevice = useDeleteDevice();
 
-  const liveActive = device?.liveModeEnabled ?? false;
+  const liveActive = isLiveModeActive(device);
+  const livePersistent = device?.livePersistent ?? false;
 
   // A reading is "located" when it has a GPS fix or a cell-tower approximation.
   const located = latest && (latest.hasFix || latest.approximate) && latest.latitude != null
@@ -69,7 +71,7 @@ export function DeviceDetailPage() {
           {liveActive && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-600">
               <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-              LIVE
+              LIVE{livePersistent ? " ∞" : ""}
             </span>
           )}
         </div>
@@ -86,13 +88,27 @@ export function DeviceDetailPage() {
               {setLiveMode.isPending ? "Stopping…" : "Stop live mode"}
             </button>
           ) : (
-            <button
-              onClick={() => setLiveMode.mutate({ enabled: true })}
-              disabled={setLiveMode.isPending}
-              className="btn-primary"
-            >
-              {setLiveMode.isPending ? "Starting…" : "Start live mode"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setLiveMode.mutate({ enabled: true, persistent: keepOn })}
+                disabled={setLiveMode.isPending}
+                className="btn-primary"
+              >
+                {setLiveMode.isPending ? "Starting…" : "Start live mode"}
+              </button>
+              <label
+                className="flex items-center gap-1.5 text-xs text-slate-500"
+                title="Keep streaming until you stop it (uses more battery)"
+              >
+                <input
+                  type="checkbox"
+                  checked={keepOn}
+                  onChange={(e) => setKeepOn(e.target.checked)}
+                  className="rounded border-slate-300"
+                />
+                Keep on
+              </label>
+            </div>
           )}
           <button
             onClick={() => setShowDelete(true)}
@@ -105,10 +121,12 @@ export function DeviceDetailPage() {
 
       {liveActive && (
         <p className="mb-3 rounded-md bg-amber-50 p-2 text-sm text-amber-800">
-          <span className="font-semibold">Live mode is on.</span> The tracker streams its position
-          continuously once it's awake — instantly if moving, otherwise on its next heartbeat
-          (up to ~30 min if it's been still). This drains the battery quickly, so turn it off when
-          you're done (it won't stop on its own).
+          <span className="font-semibold">Live mode is on{livePersistent ? " (persistent)" : ""}.</span>{" "}
+          The tracker streams its position once it's awake — instantly if moving, otherwise on its
+          next heartbeat (up to ~30 min if it's been still).{" "}
+          {livePersistent
+            ? "It keeps running until you stop it, which drains the battery — turn it off when you're done."
+            : "It runs for a short window then stops on its own; start again to extend, or tick “Keep on” for continuous."}
         </p>
       )}
       {setLiveMode.isError && (

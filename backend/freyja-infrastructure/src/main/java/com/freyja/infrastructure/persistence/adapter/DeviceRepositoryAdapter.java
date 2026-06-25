@@ -43,8 +43,8 @@ public class DeviceRepositoryAdapter implements DeviceRepository {
   }
 
   @Override
-  public List<Device> findByLiveModeEnabled() {
-    return repository.findByLiveModeEnabledTrue().stream()
+  public List<Device> findByLivePersistent() {
+    return repository.findByLivePersistentTrue().stream()
         .map(DeviceMapper::toDomain)
         .toList();
   }

@@ -15,5 +15,5 @@ public interface SpringDataDeviceRepository extends JpaRepository<DeviceEntity, 
 
   List<DeviceEntity> findByOwnerIdOrderByCreatedAtAsc(UUID ownerId);
 
-  List<DeviceEntity> findByLiveModeEnabledTrue();
+  List<DeviceEntity> findByLivePersistentTrue();
 }

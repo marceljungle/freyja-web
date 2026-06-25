@@ -23,7 +23,7 @@ export const deviceApi = {
 
   async setLiveMode(
     deviceId: string,
-    input: { enabled: boolean; interval?: number },
+    input: { enabled: boolean; persistent?: boolean; interval?: number },
   ): Promise<Device> {
     const { data } = await apiClient.post<Device>(`/devices/${deviceId}/live-mode`, input);
     return data;
