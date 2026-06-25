@@ -20,6 +20,12 @@
       <groupId>org.springframework</groupId>
     </dependency>
 
+    <!-- Logging facade (binding provided at runtime by the boot module) -->
+    <dependency>
+      <artifactId>slf4j-api</artifactId>
+      <groupId>org.slf4j</groupId>
+    </dependency>
+
     <dependency>
       <artifactId>junit-jupiter</artifactId>
       <groupId>org.junit.jupiter</groupId>

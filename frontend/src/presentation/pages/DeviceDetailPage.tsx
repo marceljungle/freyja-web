@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDevice } from "@/application/devices/useDevices";
 import { useDeleteDevice } from "@/application/devices/useDeleteDevice";
-import { isLiveModeActive, useSetLiveMode } from "@/application/devices/useSetLiveMode";
+import { useSetLiveMode } from "@/application/devices/useSetLiveMode";
 import { useLatestTelemetry, useTrajectory } from "@/application/telemetry/useTelemetry";
 import { DeviceMap } from "@/presentation/components/map/DeviceMap";
 import { BatteryBadge } from "@/presentation/components/BatteryBadge";
@@ -40,7 +40,7 @@ export function DeviceDetailPage() {
   const setLiveMode = useSetLiveMode(deviceId);
   const deleteDevice = useDeleteDevice();
 
-  const liveActive = isLiveModeActive(device?.liveModeUntil);
+  const liveActive = device?.liveModeEnabled ?? false;
 
   // A reading is "located" when it has a GPS fix or a cell-tower approximation.
   const located = latest && (latest.hasFix || latest.approximate) && latest.latitude != null
@@ -104,9 +104,11 @@ export function DeviceDetailPage() {
       </div>
 
       {liveActive && (
-        <p className="mb-3 rounded-md bg-red-50 p-2 text-sm text-red-700">
-          Live mode active — the device is streaming fixes (~every 10–30 s). Auto-stops by{" "}
-          {formatDateTime(device?.liveModeUntil)} unless you stop it sooner.
+        <p className="mb-3 rounded-md bg-amber-50 p-2 text-sm text-amber-800">
+          <span className="font-semibold">Live mode is on.</span> The tracker streams its position
+          continuously once it's awake — instantly if moving, otherwise on its next heartbeat
+          (up to ~30 min if it's been still). This drains the battery quickly, so turn it off when
+          you're done (it won't stop on its own).
         </p>
       )}
       {setLiveMode.isError && (

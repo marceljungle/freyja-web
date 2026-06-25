@@ -17,6 +17,9 @@ public interface DeviceRepository {
 
   List<Device> findByOwnerId(UUID ownerId);
 
+  /** All devices that currently have live mode enabled (for the keep-alive). */
+  List<Device> findByLiveModeEnabled();
+
   boolean existsByImei(Imei imei);
 
   /** Deletes a device; related telemetry and commands cascade at the database level. */

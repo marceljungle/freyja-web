@@ -19,8 +19,3 @@ export function useSetLiveMode(deviceId: string | undefined) {
     },
   });
 }
-
-/** True while the device's live-mode window (set by the backend) is still open. */
-export function isLiveModeActive(liveModeUntil: string | null | undefined): boolean {
-  return liveModeUntil != null && new Date(liveModeUntil).getTime() > Date.now();
-}

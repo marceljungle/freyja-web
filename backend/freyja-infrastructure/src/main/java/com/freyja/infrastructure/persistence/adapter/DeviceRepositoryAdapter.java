@@ -43,6 +43,13 @@ public class DeviceRepositoryAdapter implements DeviceRepository {
   }
 
   @Override
+  public List<Device> findByLiveModeEnabled() {
+    return repository.findByLiveModeEnabledTrue().stream()
+        .map(DeviceMapper::toDomain)
+        .toList();
+  }
+
+  @Override
   public boolean existsByImei(Imei imei) {
     return repository.existsByImei(imei.value());
   }

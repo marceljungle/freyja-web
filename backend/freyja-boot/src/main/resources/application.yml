@@ -47,8 +47,9 @@ freyja:
     base-url: ${FREYJA_OPENCELLID_BASE_URL:https://opencellid.org}
     timeout-ms: ${FREYJA_OPENCELLID_TIMEOUT_MS:3000}
   live-mode:
-    # Backend-side mirror of the firmware live-mode auto-off (FREYJA_LIVE_MAX_DURATION_SEC).
-    max-duration-sec: ${FREYJA_LIVE_MODE_MAX_DURATION_SEC:600}
+    # Keep-alive: how often to re-send live_on to enabled devices, refreshing the
+    # firmware auto-off (FREYJA_LIVE_MAX_DURATION_SEC, 600s). Must be shorter than that.
+    keepalive-ms: ${FREYJA_LIVE_MODE_KEEPALIVE_MS:300000}
 
 logging:
   level:

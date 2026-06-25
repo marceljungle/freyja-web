@@ -29,13 +29,15 @@ public class Device {
 
   private Instant lastSeenAt;
 
-  private Instant liveModeUntil;
+  private boolean liveModeEnabled;
+
+  private Integer liveModeInterval;
 
   private Instant updatedAt;
 
   public Device(UUID id, Imei imei, String name, String fwVersion, UUID ownerId,
-      NetworkConfig networkConfig, Instant lastSeenAt, Instant liveModeUntil,
-      Instant createdAt, Instant updatedAt) {
+      NetworkConfig networkConfig, Instant lastSeenAt, boolean liveModeEnabled,
+      Integer liveModeInterval, Instant createdAt, Instant updatedAt) {
     this.id = Objects.requireNonNull(id, "id");
     this.imei = Objects.requireNonNull(imei, "imei");
     this.name = normaliseName(name);
@@ -43,7 +45,8 @@ public class Device {
     this.ownerId = Objects.requireNonNull(ownerId, "ownerId");
     this.networkConfig = networkConfig;
     this.lastSeenAt = lastSeenAt;
-    this.liveModeUntil = liveModeUntil;
+    this.liveModeEnabled = liveModeEnabled;
+    this.liveModeInterval = liveModeInterval;
     this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
     this.updatedAt = Objects.requireNonNull(updatedAt, "updatedAt");
   }
@@ -54,7 +57,7 @@ public class Device {
   public static Device register(Imei imei, String name, String fwVersion, UUID ownerId,
       NetworkConfig networkConfig, Instant now) {
     return new Device(UUID.randomUUID(), imei, name, fwVersion, ownerId,
-        networkConfig, null, null, now, now);
+        networkConfig, null, false, null, now, now);
   }
 
   private static String normaliseName(String name) {
@@ -85,17 +88,21 @@ public class Device {
   }
 
   /**
-   * Mark live (real-time) mode as active until {@code until}. Mirrors the
-   * firmware auto-off deadline so the UI can show an accurate, self-expiring
-   * toggle state.
+   * Enable live (real-time) mode. It stays on until {@link #disableLiveMode}
+   * (a backend keep-alive re-sends {@code live_on} so the firmware never auto-offs);
+   * the firmware's own low-battery cutoff is the hardware safety net.
+   *
+   * @param interval optional seconds between live updates (null = firmware default).
    */
-  public void enableLiveMode(Instant until, Instant now) {
-    this.liveModeUntil = until;
+  public void enableLiveMode(Integer interval, Instant now) {
+    this.liveModeEnabled = true;
+    this.liveModeInterval = interval;
     this.updatedAt = now;
   }
 
   public void disableLiveMode(Instant now) {
-    this.liveModeUntil = null;
+    this.liveModeEnabled = false;
+    this.liveModeInterval = null;
     this.updatedAt = now;
   }
 
@@ -127,8 +134,12 @@ public class Device {
     return lastSeenAt;
   }
 
-  public Optional<Instant> liveModeUntil() {
-    return Optional.ofNullable(liveModeUntil);
+  public boolean liveModeEnabled() {
+    return liveModeEnabled;
+  }
+
+  public Optional<Integer> liveModeInterval() {
+    return Optional.ofNullable(liveModeInterval);
   }
 
   public Instant createdAt() {

@@ -8,22 +8,23 @@ import com.freyja.domain.model.device.Device;
 import com.freyja.domain.port.out.DeviceRepository;
 import com.freyja.domain.port.out.MqttPublisher;
 import com.freyja.domain.port.out.TimeProvider;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
  * Toggles live (real-time) mode on a device by publishing {@code live_on} /
- * {@code live_off} to its command topic, and records the expected on-until
- * deadline (mirroring the firmware auto-off) so the UI shows an accurate toggle.
+ * {@code live_off} to its command topic.
+ *
+ * <p>Live mode is persistent: it stays on until explicitly turned off. The
+ * firmware auto-offs after a short window as a battery safeguard, so a scheduled
+ * keep-alive ({@link LiveModeRefresher}) re-sends {@code live_on} to enabled
+ * devices to keep them streaming. The firmware's low-battery cutoff remains the
+ * hardware safety net.
  *
  * <p>Replaces the old request-location command: the device already reports on
- * motion, so an on-demand single fix made little sense; live mode streams fixes
- * for a bounded window instead.
+ * motion, so an on-demand single fix made little sense.
  */
 @Service
 public class SetLiveModeUseCase extends AbstractUseCase<SetLiveModeCommand, DeviceView> {
-
-  private static final String LIVE_OFF_PAYLOAD = "{\"cmd\":\"live_off\"}";
 
   private final DeviceAccessService deviceAccess;
 
@@ -33,19 +34,14 @@ public class SetLiveModeUseCase extends AbstractUseCase<SetLiveModeCommand, Devi
 
   private final TimeProvider time;
 
-  /** Mirrors the firmware FREYJA_LIVE_MAX_DURATION_SEC auto-off (default 600 s). */
-  private final long maxDurationSeconds;
-
   public SetLiveModeUseCase(DeviceAccessService deviceAccess,
       DeviceRepository deviceRepository,
       MqttPublisher mqttPublisher,
-      TimeProvider time,
-      @Value("${freyja.live-mode.max-duration-sec:600}") long maxDurationSeconds) {
+      TimeProvider time) {
     this.deviceAccess = deviceAccess;
     this.deviceRepository = deviceRepository;
     this.mqttPublisher = mqttPublisher;
     this.time = time;
-    this.maxDurationSeconds = maxDurationSeconds;
   }
 
   @Override
@@ -55,10 +51,10 @@ public class SetLiveModeUseCase extends AbstractUseCase<SetLiveModeCommand, Devi
 
     String payload;
     if (input.enabled()) {
-      payload = liveOnPayload(input.interval());
-      device.enableLiveMode(now.plusSeconds(maxDurationSeconds), now);
+      payload = LiveModeCommands.liveOn(input.interval());
+      device.enableLiveMode(input.interval(), now);
     } else {
-      payload = LIVE_OFF_PAYLOAD;
+      payload = LiveModeCommands.LIVE_OFF;
       device.disableLiveMode(now);
     }
 
@@ -71,12 +67,5 @@ public class SetLiveModeUseCase extends AbstractUseCase<SetLiveModeCommand, Devi
     }
 
     return DeviceView.from(deviceRepository.save(device));
-  }
-
-  private static String liveOnPayload(Integer interval) {
-    if (interval == null) {
-      return "{\"cmd\":\"live_on\"}";
-    }
-    return "{\"cmd\":\"live_on\",\"interval\":" + interval + "}";
   }
 }

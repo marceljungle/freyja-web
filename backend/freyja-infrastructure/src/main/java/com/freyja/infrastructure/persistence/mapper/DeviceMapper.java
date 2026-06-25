@@ -23,7 +23,8 @@ public final class DeviceMapper {
         e.getOwnerId(),
         networkConfig,
         e.getLastSeenAt(),
-        e.getLiveModeUntil(),
+        e.isLiveModeEnabled(),
+        e.getLiveModeInterval(),
         e.getCreatedAt(),
         e.getUpdatedAt());
   }
@@ -45,7 +46,8 @@ public final class DeviceMapper {
       e.setBrokerPort(null);
     });
     e.setLastSeenAt(device.lastSeenAt());
-    e.setLiveModeUntil(device.liveModeUntil().orElse(null));
+    e.setLiveModeEnabled(device.liveModeEnabled());
+    e.setLiveModeInterval(device.liveModeInterval().orElse(null));
     e.setCreatedAt(device.createdAt());
     e.setUpdatedAt(device.updatedAt());
     return e;
